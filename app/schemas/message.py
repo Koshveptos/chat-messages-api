@@ -11,7 +11,7 @@ class MessageCreate(BaseModel):
     def strip_text(cls, v: str) -> str:
         res = v.strip()
         if not res:
-            raise ValueError("empty title after stripping")
+            raise ValueError("empty text after stripping")
         return res
 
 

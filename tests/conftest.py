@@ -1,54 +1,61 @@
-import asyncio
 import os
+from typing import AsyncGenerator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
-from app.core.config import Settings
-from app.core.database import get_db_session
-from app.main import create_app
+from app.models.base import Base
+from app.models.chat import Chat  # noqa: F401
+from app.models.message import Message  # noqa: F401
 
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def test_env():
-    os.environ["ENV"] = "test"
+os.environ["ENV"] = "test"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["DEBUG"] = "true"
 
 
 @pytest.fixture(scope="session")
-def settings():
-    return Settings()
+async def engine():
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        echo=False,
+        poolclass=StaticPool,
+    )
 
+    # сreate all tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-@pytest.fixture(scope="session")
-async def engine(settings):
-    engine = create_async_engine(settings.database_url)
     yield engine
+
     await engine.dispose()
 
 
 @pytest.fixture
-async def db_session(engine) -> AsyncSession:
-    async_session = sessionmaker(
+async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
+    async_session = async_sessionmaker(
         engine,
         class_=AsyncSession,
         expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
     )
-    async with async_session() as session:
+
+    session = async_session()
+
+    try:
         yield session
+    finally:
         await session.rollback()
+        await session.close()
 
 
 @pytest.fixture
-async def client(db_session):
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    from app.core.database import get_db_session
+    from app.main import create_app
+
     app = create_app()
 
     async def override_get_db():
@@ -61,5 +68,8 @@ async def client(db_session):
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
-    ) as client:
-        yield client
+        headers={"Content-Type": "application/json"},
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()

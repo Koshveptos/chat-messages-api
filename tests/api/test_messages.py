@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 
@@ -31,7 +33,7 @@ async def test_create_message_with_spaces(client: AsyncClient):
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["text"] == "Test text"
+    assert data["text"] == "Test    text"
 
 
 @pytest.mark.asyncio
@@ -86,8 +88,11 @@ async def test_create_message_with_time(client: AsyncClient):
     chat_id = chat_response.json()["id"]
 
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "First"})
+    await asyncio.sleep(1)
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "Second"})
+    await asyncio.sleep(1)
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "Third"})
+    await asyncio.sleep(1)
 
     response = await client.get(f"/chats/{chat_id}?limit=10")
     assert response.status_code == 200

@@ -10,7 +10,10 @@ async def test_pagination_fewer_than_limit(client: AsyncClient):
     chat_id = chat_response.json()["id"]
 
     for i in range(3):
-        await client.post(f"/chats/{chat_id}/message", json={"text": f"msg {i}"})
+        msg_resp = await client.post(
+            f"/chats/{chat_id}/messages/", json={"text": f"msg {i}"}
+        )
+        assert msg_resp.status_code == 201
 
     response = await client.get(f"/chats/{chat_id}?limit=20")
     assert response.status_code == 200

@@ -1,27 +1,36 @@
-version: "3.9"
 
 services:
   db:
     image: postgres:16
     container_name: chat_api_db
     environment:
-      POSTGRES_USER: chat
-      POSTGRES_PASSWORD: chat
-      POSTGRES_DB: chat
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: postgres  
+      POSTGRES_DB: chatdb         
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:  
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  test-db:
-    image: postgres:16
-    container_name: chat_api_test_db
-    environment:
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: test_chat
+  api:
+    build: .
+    container_name: chat_api_app
     ports:
-      - "5433:5432"
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/chatdb  
+      - DEBUG=true
+    depends_on:
+      db:
+        condition: service_healthy 
+    volumes:
+      - .:/app  
+    command: ["/app/entrypoint.sh"]  
 
 volumes:
   postgres_data:

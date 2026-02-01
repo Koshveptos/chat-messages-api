@@ -82,7 +82,7 @@ async def test_get_chat_with_limit(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_delete_chat_not_found(client: AsyncClient):
     # удаление несуществующего чата
-    response = await client.post("/chats/9999999")
+    response = await client.delete("/chats/9999999")
     assert response.status_code == 404
 
 
