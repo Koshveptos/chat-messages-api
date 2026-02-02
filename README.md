@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Chat Messages API
 
 
@@ -25,6 +25,3 @@ Health check: http://localhost:8000/health
 docker compose run --rm test
 ```
 
-=======
-
->>>>>>> a0739fb1418f7b0d9f319a61f32868e69e5f3319
