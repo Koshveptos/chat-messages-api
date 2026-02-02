@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
 
 
 def setup_logging() -> None:

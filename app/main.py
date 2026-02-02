@@ -13,10 +13,10 @@ setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    logger.info("Application is starting up...")
-    logger.info("Swagger UI: http://localhost:8000/docs")
+    logger.debug("Application is starting up...")
+    logger.debug("Swagger UI: http://localhost:8000/docs")
     yield
-    logger.info("Application is shutting down...")
+    logger.debug("Application is shutting down...")
 
 
 def create_app() -> FastAPI:
@@ -32,10 +32,10 @@ def create_app() -> FastAPI:
     ##тестовый для првоерки
     app.include_router(health_router)
 
-    logger.info("Application started!")
-    logger.info("Swagger UI: http://localhost:8000/docs")
-    logger.info("ReDoc: http://localhost:8000/redoc")
-    logger.info("API: http://localhost:8000")
+    logger.debug("Application started!")
+    logger.debug("Swagger UI: http://localhost:8000/docs")
+    logger.debug("ReDoc: http://localhost:8000/redoc")
+    logger.debug("API: http://localhost:8000")
     return app
 
 
