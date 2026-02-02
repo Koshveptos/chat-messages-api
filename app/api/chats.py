@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
+from app.core.logging import logger
 from app.models.chat import Chat
 from app.models.message import Message
 from app.schemas.chat import ChatCreate, ChatDetailResponse, ChatResponse
@@ -22,10 +23,13 @@ async def create_chat(
     chat_data: ChatCreate, db: Annotated[AsyncSession, Depends(get_db_session)]
 ) -> ChatResponse:
     db_chat = Chat(title=chat_data.title)
-
+    logger.info(f"Create new chat with title {db_chat.title}")
     db.add(db_chat)
     await db.commit()
     await db.refresh(db_chat)
+    logger.info(
+        f"Chat create seccessfully id {db_chat.id}  with title = {db_chat.title}"
+    )
     return db_chat
 
 
@@ -47,13 +51,13 @@ async def get_chat(
     ] = 20,
 ) -> ChatDetailResponse:
     chat: Chat | None = await db.get(Chat, chat_id)
-
+    logger.info(f"Get chat with id {chat_id} and limit = {limit}")
     if chat is None:
+        logger.warning(f"Chat with id {chat_id} not found ")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Chat with id {chat_id} not found",
         )
-    print(f"Chat ID: {chat_id}, Chat: {chat}")
     result = await db.execute(
         select(Message)
         .where(Message.chat_id == chat_id)
@@ -61,7 +65,7 @@ async def get_chat(
         .limit(limit)
     )
     messages = list(result.scalars().all())
-    print(f"Messages found: {len(messages)}")
+    logger.info(f"Get chat with id {chat_id}  with {len(messages)} messages")
     chat.messages = messages
     return chat
 
@@ -75,12 +79,14 @@ async def delete_chat(
     chat_id: int, db: Annotated[AsyncSession, Depends(get_db_session)]
 ) -> None:
     chat: Chat | None = await db.get(Chat, chat_id)
-
+    logger.info(f"Deleting chat with id {chat_id}")
     if chat is None:
+        logger.warning(f"Chat with id = {chat_id} not found ")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Chat with id {chat_id} not found",
         )
     await db.delete(chat)
     await db.commit()
+    logger.info(f"Chat with id {chat_id} deleted seccessfully")
     return None
