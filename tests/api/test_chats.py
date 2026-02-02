@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 
@@ -5,20 +7,20 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_create_chat_success(client: AsyncClient):
     # успешное создание чата с валидным титлом
-    response = await client.post("/chats/", json={"title": "Test Chat"})
+    text = "Test Chat"
+    response = await client.post("/chats/", json={"title": text})
     assert response.status_code == 201
     data = response.json()
     assert "id" in data
-    assert data["title"] == "Test Chat"
+    assert data["title"] == text
     assert "created_at" in data
 
 
 @pytest.mark.asyncio
 async def test_create_chat_with_spaces(client: AsyncClient):
     # пробелы по краям
-    response = await client.post(
-        "/chats/", json={"title": "        text with spaces        "}
-    )
+    text = "        text with spaces        "
+    response = await client.post("/chats/", json={"title": text})
     assert response.status_code == 201
     data = response.json()
     assert data["title"] == "text with spaces"
@@ -76,7 +78,22 @@ async def test_get_chat_seccess(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_chat_with_limit(client: AsyncClient):
     # получение с лимитом
-    pass
+    create_response = await client.post("/chats/", json={"title": "Test Chat"})
+    assert create_response.status_code == 201
+    chat_id = create_response.json()["id"]
+
+    for i in range(10):
+        await client.post(f"/chats/{chat_id}/messages/", json={"text": f"Msg {i}"})
+        # задержка нужна хотя бы 1с что б порядок соблюдался
+        await asyncio.sleep(1)
+
+    response = await client.get(f"/chats/{chat_id}?limit=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["messages"]) == 5
+    ##проверяем порядок
+    assert data["messages"][0]["text"] == "Msg 9"
+    assert data["messages"][4]["text"] == "Msg 5"
 
 
 @pytest.mark.asyncio
@@ -97,9 +114,3 @@ async def test_delete_chat_success(client: AsyncClient):
     response = await client.delete(f"/chats/{chat_id}")
     assert response.status_code == 204
     assert response.text == ""
-
-
-@pytest.mark.asyncio
-async def test_delete_cascad_chats(client: AsyncClient):
-    # проверка каскадного удаления
-    pass
