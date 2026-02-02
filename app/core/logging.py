@@ -1,14 +1,22 @@
 import logging
+import os
 from pathlib import Path
 
-LOG_FILE_PATH = Path(__file__).parent.parent.joinpath("logs").joinpath("app.log")
 
-logging.basicConfig(
-    filename=str(LOG_FILE_PATH),
-    level=logging.INFO,
-    format="[%(asctime)s][%(levelname)s]: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+def setup_logging() -> None:
+    log_dir = Path(os.getenv("LOG_DIR", "logs"))
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    log_file = log_dir / "app.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(),
+        ],
+    )
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("chat-api")
