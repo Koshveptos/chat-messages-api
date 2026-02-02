@@ -1,8 +1,14 @@
 import logging
+from pathlib import Path
+
+LOG_FILE_PATH = Path(__file__).parent.parent.joinpath("logs").joinpath("app.log")
+
+logging.basicConfig(
+    filename=str(LOG_FILE_PATH),
+    level=logging.INFO,
+    format="[%(asctime)s][%(levelname)s]: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
-def setup_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
+logger = logging.getLogger(__name__)

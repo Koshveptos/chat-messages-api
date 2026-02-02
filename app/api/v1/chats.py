@@ -22,6 +22,7 @@ async def create_chat(
     chat_data: ChatCreate, db: Annotated[AsyncSession, Depends(get_db_session)]
 ) -> ChatResponse:
     db_chat = Chat(title=chat_data.title)
+
     db.add(db_chat)
     await db.commit()
     await db.refresh(db_chat)

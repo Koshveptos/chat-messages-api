@@ -1,15 +1,15 @@
 from logging.config import fileConfig
 import asyncio
-from typing import Any
 
 from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import async_engine_from_config, AsyncEngine
+from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.engine import Connection
-
-from alembic import context  # type: ignore[attr-defined]
+from alembic import context
 
 from app.core.config import settings
 from app.models.base import Base
+from app.models.chat import Chat  # noqa: F401
+from app.models.message import Message  # noqa: F401
 
 
 config = context.config
@@ -17,11 +17,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-
 target_metadata = Base.metadata
 
 
-config.set_main_option("sqlalchemy.url", settings.database_url.replace("+asyncpg", ""))
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 
 def run_migrations_offline() -> None:
@@ -39,7 +38,6 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    """Run migrations with an established connection."""
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
@@ -47,8 +45,10 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """Create and run async migrations."""
-    connectable: AsyncEngine = async_engine_from_config(
+    """In this scenario we need to create an AsyncEngine
+    and associate a connection with the context."""
+
+    connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
