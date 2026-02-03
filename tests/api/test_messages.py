@@ -88,11 +88,11 @@ async def test_create_message_with_time(client: AsyncClient):
     chat_id = chat_response.json()["id"]
 
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "First"})
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.01)
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "Second"})
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.01)
     await client.post(f"/chats/{chat_id}/messages/", json={"text": "Third"})
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.01)
 
     response = await client.get(f"/chats/{chat_id}?limit=10")
     assert response.status_code == 200

@@ -1,6 +1,6 @@
-from datetime import datetime
+import time
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -16,10 +16,8 @@ class Message(Base):
         index=True,
     )
     text: Mapped[str] = mapped_column(String(5000), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
+    created_at: Mapped[float] = mapped_column(
+        Float, default=lambda: time.time(), nullable=False
     )
     chat: Mapped["Chat"] = relationship(  # noqa: F821
         "Chat", back_populates="messages", lazy="joined"

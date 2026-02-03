@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from app.schemas.message import MessageResponse
 
@@ -20,14 +20,19 @@ class ChatCreate(BaseModel):
 class ChatResponse(BaseModel):
     id: int
     title: str
-    created_at: datetime
+    created_at: float
+
+    @field_serializer("created_at")
+    def seriaze_created_at(self, created_at: float) -> str:
+        return datetime.fromtimestamp(created_at).isoformat()
+
     model_config = {"from_attributes": True}
 
 
 class ChatDetailResponse(BaseModel):
     id: int
     title: str
-    created_at: datetime
+    created_at: float
     messages: list["MessageResponse"] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}

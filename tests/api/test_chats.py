@@ -85,7 +85,7 @@ async def test_get_chat_with_limit(client: AsyncClient):
     for i in range(10):
         await client.post(f"/chats/{chat_id}/messages/", json={"text": f"Msg {i}"})
         # задержка нужна хотя бы 1с что б порядок соблюдался
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.01)
 
     response = await client.get(f"/chats/{chat_id}?limit=5")
     assert response.status_code == 200
